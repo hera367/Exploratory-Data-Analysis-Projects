@@ -1,0 +1,506 @@
+---
+author: "Hera Fatma (231180006)"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+DATASET: Student Mental Health Survey (Source: Kaggle)
+
+
+LOADING LIBRARIES 
+```{r}
+# install.packages("corrplot")
+library(tidyverse)
+library(ggplot2)
+library(lsr)
+library(psych)
+library(dplyr)
+library(corrplot)
+library(reshape2)
+library(viridis)
+```
+LOAD DATASET
+
+```{r}
+data_health <- read_csv("./../datasets/MentalHealthSurvey.csv")
+```
+**EXPLORATORY DATA ANALYSIS:**
+
+*STATISTICAL ANALYSIS:*
+
+
+Aim: To check how all the other factors effects Mental health indicators: depression, anxiety, isolation, future_insecurity.
+
+```{r}
+head(data_health)
+dim(data_health)
+sample(data_health) ## sample random rows
+spec(data_health)  ## column specifications
+str(data_health)
+```
+
+```{r}
+summary(data_health)
+```
+```{r}
+describe(data_health) ## categorical data
+```
+
+
+CHECKING FOR NULL AND DUPLICATE VALUES
+
+```{r}
+sum(is.na(data_health))
+sum(duplicated(data_health))
+```
+Inference: no missing or duplicated value. Therefore, no data cleaning required.
+
+
+SEPERATING COLUMNS BASED ON DATA TYPES
+
+1. TO SELECT ALL THE COLUMNS WHICH ARE NUMERIC
+
+```{r}
+data_num <- select_if(data_health, is.numeric)
+data_num
+```
+2. TO SELECT ALL THE COLUMNS WHICH ARE CHARACTER
+
+```{r}
+data_char <- select_if(data_health, is.character)
+data_char
+```
+
+
+*CENTRAL TENDENCIES*:
+
+
+Mean for all the numerical columns
+
+```{r}
+mean_cols <- colMeans(
+select (data_num, age, study_satisfaction, academic_workload, academic_pressure, financial_concerns, social_relationships, depression, anxiety, isolation, future_insecurity))
+mean_cols
+```
+
+
+Standard Deviation for all the numerical columns
+
+```{r}
+# age
+sd_age <- sd(data_health$age,2)
+sd_age
+
+# all num_cols
+sd_cols <- apply(data_health[, 12:20], 2, sd)
+sd_cols
+```
+
+
+SKEWNESS
+
+Note:
+Skewness values and interpretation
+
+A rule of thumb states that: 
+
+Symmetric: Values between -0.5 to 0.5. 
+Moderated Skewed data: Values between -1 and -0.5 or between 0.5 and 1. 
+Highly Skewed data: Values less than -1 or greater than 1.
+
+```{r}
+skew(data_num)
+```
+
+KURTSIS
+
+Main three types of kurtosis.
+
+Mesokurtic: This is the normal distribution
+Leptokurtic: This distribution has fatter tails and a sharper peak. The kurtosis is “positive” with a value greater than 3
+Platykurtic: The distribution has a lower and wider peak and thinner tails. The kurtosis is “negative” with a value greater than 3
+
+*Note: that we define the excess kurtosis as kurtosis minus 3
+
+```{r}
+describe(data_num)
+```
+
+```{r}
+describeBy( x=data_health, group=data_health$gender)
+```
+
+```{r}
+# describeBy( x=data_health, group=data_health$depression)
+```
+
+```{r}
+# describeBy( x=data_health, group=data_health$anxiety)
+```
+
+```{r}
+# describeBy( x=data_health, group=data_health$isolation)
+```
+
+```{r}
+by(data=data_health, INDICES=data_health$gender, FUN=summary)
+```
+Inference: 
+
+Females are more prone to an imbalance in mental health.
+
+```{r}
+# anxiety, depression, acadmic_workload
+
+aggregate(anxiety ~ depression + academic_workload, 
+           data = data_health,
+           FUN = mean)
+```
+Inference:
+
+High workload and depression score leds to more anxiety.
+
+
+```{r}
+aggregate(anxiety ~ depression + age, 
+           data = data_health,
+           FUN = mean)
+```
+Inference:
+
+more age + high depression score = more anxiety levels
+
+
+```{r}
+aggregate(anxiety ~ academic_workload + academic_pressure, 
+           data = data_health,
+           FUN = mean)
+```
+Inference:
+
+High academic workload is leds to high anxiety.
+
+
+
+*DATA DISTRUBUTION* 
+
+```{r}
+# age
+ggplot(data_health, aes(x = age)) + geom_histogram(bins = 10, color = "black", fill = "dodgerblue3")
+
+# depression
+ggplot(data_health, aes(x = depression)) + geom_histogram(bins = 5, color = "black", fill = "hotpink2")
+```
+
+
+*DEMOGRAPHIC DISTRIBUTIONS (PLOTS)*
+
+1. BAR PLOTS
+
+```{r}
+# Distribution of Categorical variables
+
+cat_vars <- c("gender", "university", "degree_level", "degree_major", "academic_year", "cgpa", "residential_status", "campus_discrimination", "sports_engagement", "average_sleep" )
+
+for (var in cat_vars) {
+  print(ggplot(data_health, aes_string(x = var)) +
+    geom_bar(color = "black", fill = "dodgerblue3") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = paste("Distribution of", var))) +
+    theme_classic()
+}
+```
+
+Inference:
+
+1. No.of male >> no. of female.
+2. PU university has the maximum admission.
+3. Undergrads >> Postgrads.
+4. Max. students in Data science and computer science.
+5. More number of students in 1st and 3rd year.
+6. Max with cgpa between 3.0 to 4.0
+7. Majority stays off- campus.
+8. Less people faced campus discrimination.
+9. Majority are not involved in any sports.
+10. Majority has average sleep between 4-6 hrs.
+
+
+
+2. Distribution of numerical variables
+
+```{r}
+# Distribution of numerical variables
+
+num_vars <- c("study_satisfaction", "academic_workload", "academic_pressure", "financial_concerns", "social_relationships", "depression", "anxiety", "isolation", "future_insecurity")
+
+for (var in num_vars) {
+  print(ggplot(data_health, aes_string(x = var)) +
+    geom_histogram(binwidth = 1, color = "black", fill = "hotpink3") +
+    labs(title = paste("Distribution of", var)))
+}
+```
+
+3. BOXPLOT
+
+```{r}
+combined_data <- data_health %>%
+  pivot_longer(cols = c(study_satisfaction, academic_workload, academic_pressure, financial_concerns,  social_relationships, depression, anxiety, isolation, future_insecurity),
+              names_to = "Variable",
+              values_to = "Value")
+
+
+ggplot(combined_data, aes(x = Variable, y = Value, fill = Variable)) +
+geom_boxplot() +
+labs(title = "Sleep Dataset") +
+theme_classic() +
+theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 45, hjust = 1)) +
+scale_fill_manual(values = c("cornflowerblue", "maroon", "cornflowerblue", "maroon", "cornflowerblue", "maroon", "cornflowerblue", "maroon", "cornflowerblue", "maroon", "cornflowerblue"))
+```
+
+Inference: No outliers
+
+
+4. Pie-chart (Gender)
+
+```{r}
+# Pie chart: Gender distribution
+
+gender_counts <- data_health %>% count(gender)
+ggplot(gender_counts, aes(x = "", y = n, fill = gender)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  theme_void() +
+  labs(title = "Gender Distribution") +
+  scale_fill_brewer(palette = "Set6")
+```
+
+3. NO. OF MALE AND FEMALE STUDENTS BASED ON UNIVERSITY, DEGREE_LEVEL AND DEGREE_MAJOR
+
+```{r}
+ggplot(data_health, aes(gender, degree_major, fill = degree_level)) + geom_bar(stat = "identity", position = "dodge") + theme_classic()
+
+ggplot(data_health, aes(gender, university, fill = degree_level)) + geom_bar(stat = "identity", position = "dodge") + theme_classic()
+
+ggplot(data_health, aes(university, gender, fill = degree_level)) + geom_bar(stat = "identity", position = "dodge") + theme_classic()
+
+```
+```{r}
+# Filtering male and female data 
+
+no_male <- filter(data_health, gender == "Male")
+dim(no_male)
+no_female <- filter(data_health, gender == "Female")
+dim(no_female)
+```
+
+Inference:
+
+Branch and degree-wise distribution of students.
+
+1. The dataset appears to have more male students than female students.
+2. No female student in postgraduate.
+3. Most students are undergraduates, with a mix of Data Science, Computer Science, IT and SWE majors.
+
+
+To check number of PG Females
+
+```{r}
+## To check number of PG Females
+
+females <- filter(data_health, gender == 'Female')
+females
+pg_females <- sum(filter(females, degree_level == 'Postgraduate'))
+pg_females
+dim(females)
+dim(pg_females)
+```
+Inference:
+
+1. A total of 24 female students in overall program.
+2. Conformation --> no female pg student.
+
+
+4. Barplots
+
+```{r}
+#barplot(as.matrix(data_num$isolation), main="Multiple Bar Plots", ylab="Count", beside=TRUE)
+```
+
+
+5. Violin plot (Depression scores by gender)
+
+```{r}
+ggplot(data_health, aes(x = gender, y = depression, fill = gender)) +
+  geom_violin() +
+  geom_boxplot(width = 0.1, fill = "white") +
+  theme_classic() +
+  labs(title = "Depression Scores by Gender", x = "Gender", y = "Depression Score") +
+  scale_fill_brewer(palette = "Pastel1")
+```
+Inference:
+
+Female have a higher depression score.
+
+
+6. Scatter plot (Relationship between academic pressure and depression)
+
+```{r}
+ggplot(data_health, aes(x = academic_pressure, y = depression)) + geom_point(aes(color = gender), alpha = 0.6) + geom_smooth(method = "lm", se = FALSE, color = "black") +
+  theme_minimal() +
+  labs(title = "Academic Pressure vs Depression", x = "Academic Pressure", y = "Depression Score") +
+  scale_color_brewer(palette = "Set1")
+```
+Inference:
+
+1. Linearly correlated.
+2. As the academic pressure increases, depression score also increases.
+
+
+
+7. Stacked bar plot (CGPA distribution by degree major)
+
+```{r}
+ggplot(data_health, aes(x = degree_major, fill = cgpa)) +
+  geom_bar(position = "fill") +
+  theme_classic() +
+  labs(title = "CGPA Distribution by Degree Major", x = "Degree Major", y = "Proportion") +
+  scale_fill_viridis_d() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+8. Grouped bar plot  (Average sleep duration by sports engagement)
+
+```{r}
+ggplot(data_health, aes(x = sports_engagement, fill = average_sleep)) +
+  geom_bar(position = "dodge") +
+  theme_classic() +
+  labs(title = "Average Sleep Duration by Sports Engagement", x = "Sports Engagement", y = "Count") +
+  scale_fill_brewer(palette = "YlOrRd") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Inference:
+
+1. People with no sports engagements have an average sleep of 4-6 hrs.
+2. More sports engagement effects the optimal sleep duration (7-8 hrs), negatively.
+
+
+
+9. Density plot (Distribution of anxiety scores by gender)
+
+```{r}
+ggplot(data_health, aes(x = anxiety, fill = gender)) +
+  geom_density(alpha = 0.7) +
+  theme_classic() +
+  labs(title = "Distribution of Anxiety Scores by Gender", x = "Anxiety Score", y = "Density") +
+  scale_fill_brewer(palette = "Set2")
+```
+Inference:
+
+Females have a higher distribution for anxiety score.
+
+
+10. Faceted histogram (Mental health indicators: depression, anxiety, isolation, future_insecurity)
+
+```{r}
+mental_health_long <- data_health %>%
+  select(depression, anxiety, isolation, future_insecurity) %>%
+  pivot_longer(cols = everything(), names_to = "variable", values_to = "value")
+
+ggplot(mental_health_long, aes(x = value, fill = variable)) +
+  geom_histogram(binwidth = 1, alpha = 0.7) +
+  facet_wrap(~ variable, scales = "free_y") +
+  theme_classic() +
+  labs(title = "Distribution of Mental Health Indicators", x = "Score", y = "Count") +
+  scale_fill_brewer(palette = "Set1")
+```
+
+
+11. CORRELATINAL PLOT BETWEEN NUMERICAL VARIABLES
+
+```{r}
+#cor_matrix <- cor(data_health %>% select(study_satisfaction, academic_workload, academic_pressure, 
+                                                #financial_concerns, social_relationships, depression, 
+                                                #anxiety, isolation, future_insecurity))
+
+
+cor_matrix <- cor(data_health[num_vars])
+corrplot(cor_matrix, method = "circle")
+cor_matrix
+```
+
+Heat Map
+
+```{r}
+# Heatmap
+
+melted_cor_matrix <- melt(cor_matrix)
+ggplot(melted_cor_matrix, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", high = "blue", mid = "white", midpoint = 0) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Correlation Heatmap of Mental Health Variables")
+```
+
+Inference:
+
+High correlation:
+
+    1. Anxiety  and depression
+    2. Isolation and depression
+    3. Anxiety and isolation
+    
+Low correlation:
+
+    1. academic pressure and academic workload
+    2. depression, anxiety, future insecurity with academic workload
+    3. future insecurity with depression, anxiety and isolation
+    
+    
+No correlations:
+
+    1. Social relationships
+    2. Study satisfaction
+    
+    
+    
+CONCLUSIONS:
+
+1. Demographic Distribution:
+
+The dataset appears to have more male students than female students.
+Most students are undergraduates, with a mix of Data Science and Computer Science majors.
+
+2. Academic Performance:
+
+Most students have a CGPA between 3.0-4.0
+There's a relatively even distribution across academic years (1st to 3rd year).
+
+
+3. Mental Health Indicators:
+
+The distributions of depression, anxiety, and isolation scores show variation, with some students reporting high levels.
+There appears to be a correlation between depression, anxiety and isolation scores.
+
+
+4. Academic Pressure and Workload:
+
+Many students report high levels of academic pressure and workload.
+High academic workload is leds to high anxiety.
+
+
+5. Sleep Patterns:
+
+Most students report sleeping 4-6 hours per night, which is less than the recommended amount for young adults.
+
+
+6. Sports Engagement:
+
+A significant portion of students report no sports engagement, which could impact overall well-being.
+
+
+
+
+

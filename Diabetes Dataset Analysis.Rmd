@@ -1,0 +1,460 @@
+---
+author: "Hera Fatma (231180006)"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+LOADING LIBRARIES 
+```{r}
+library(tidyverse)
+library(dplyr) ## editing tibble
+library(ggplot2)
+```
+Dataset used --> Diabetes Dataset (source: Kaggel)
+
+
+Hypothesis: Increased BMI, higher glucose levels and a stronger family history of diabetes (represented by DiabetesPedigreeFunction) are the most significant factors in predicting diabetes outcome, with their impact becoming more pronounced with age.
+
+
+
+LOADING DATASET
+```{r}
+# data_paris <- read_csv("./../datasets/Olympics 2024.csv") ## read_csv() loads the data directly in tibble form (instead of read.csv)
+data <-  read_csv("./../datasets/Diabetes-Data.csv")
+head(data)
+```
+
+DATA WRANGLING
+
+
+```{r}
+nrow(data)
+ncol(data)
+```
+```{r}
+length(data) ## Gives number of columns
+```
+
+TO check number of missing or NA values in the data
+```{r}
+sum(is.na(data)) ## entire data
+sum(is.na(data$BMI)) ## in a particular column
+```
+TO REMOVE ALL THE ROWS HAVING '0' VALUE except outcome and pregnancies (Since Outcome == 0 means non- diabetic)
+
+```{r}
+data_filtered <- data %>%
+  filter(!(Glucose == 0)) %>%
+  filter(!(BloodPressure == 0)) %>%
+  filter(!(SkinThickness == 0)) %>%
+  filter(!(Insulin == 0)) %>%
+  filter(!(BMI == 0)) %>%
+  filter(!(DiabetesPedigreeFunction == 0)) %>%
+  filter(!(Age == 0))
+
+data_filtered
+```
+
+FILTER & SELECT
+
+filter --> works only on rows
+
+select --> works on columns
+
+Q1. To filter individuals whose BMI is more than 25.
+
+```{r}
+normal_BMI <- filter(data_filtered, BMI < 25)
+normal_BMI ; summary(normal_BMI)
+high_BMI <- filter(data_filtered, BMI > 25)
+high_BMI ; summary(high_BMI)
+nrow(normal_BMI)
+nrow(high_BMI)
+```
+Q2. Check for number of individuals with high glucose level (with in normal and high bmi ranges)
+
+```{r}
+g1 <- filter(data_filtered, BMI < 25 & Glucose > 100)
+head(g1)
+nrow(g1)
+summary(g1)
+```
+
+```{r}
+g2 <- filter(data_filtered, BMI > 25 & Glucose > 100)
+head(g2)
+nrow(g2)
+summary(g2)
+```
+Inference:
+
+People with higher BMI have high glucose levels.
+
+```{r}
+select(data_filtered, -Id)
+```
+
+Arrange
+
+```{r}
+arrange(data_filtered, BMI) # arranging the data on the basis of BMI (ascending)
+arrange(data_filtered, desc(BMI)) # arranging the data in descending order
+```
+
+Basic Statistical Analysis
+
+```{r}
+summary(data)
+```
+```{r}
+summary(data_filtered)
+```
+
+
+```{r}
+mean_preg <-  mean(data_filtered$Pregnancies) ; sd_preg <- sd(data_filtered$Pregnancies) ; min_preg <- min(data_filtered$Pregnancies) ; max_preg <- max(data_filtered$Pregnancies)
+mean_preg ; sd_preg ; min_preg ; max_preg
+
+mean_glu <- mean(data_filtered$Glucose) ; sd_glu <- sd(data_filtered$Glucose) ; min_glu <- min(data_filtered$Glucose) ; max_glu <- max(data_filtered$Glucose)
+mean_glu ; sd_glu ; min_glu ; max_glu
+
+mean_bp <- mean(data_filtered$BloodPressure) ; sd_bp <- sd(data_filtered$BloodPressure) ; min_bp <- min(data_filtered$BloodPressure) ; max_bp <- max(data_filtered$BloodPressure)
+mean_bp ; sd_bp ; min_bp ; max_bp
+
+mean_insulin <- mean(data_filtered$Insulin) ; sd_insulin <- sd(data_filtered$Insulin) ; min_insulin <- min(data_filtered$Insulin) ; max_insulin <- max(data_filtered$Insulin)
+mean_insulin ; sd_insulin ; min_insulin ; max_insulin
+
+mean_bmi <- mean(data_filtered$BMI) ; sd_bmi <- sd(data_filtered$BMI); min_bmi <- min(data_filtered$BMI) ; max_bmi <- max(data_filtered$BMI)
+mean_bmi ; sd_bmi ; min_bmi ; max_bmi
+
+mean_dpf <- mean(data_filtered$DiabetesPedigreeFunction) ; sd_dpf <- sd(data_filtered$DiabetesPedigreeFunction); min_dpf <- min(data_filtered$DiabetesPedigreeFunction) ; max_dpf <- max(data_filtered$DiabetesPedigreeFunction)
+mean_dpf ; sd_dpf ; min_dpf ; max_dpf
+
+mean_age <- mean(data_filtered$Age) ; sd_age <- sd(data_filtered$Age) ; min_age <- min(data_filtered$Age) ; max_age <- max(data_filtered$Age)
+mean_age ; sd_age ; min_age ; max_age
+```
+
+STATISTICAL DATA FRAME
+
+```{r}
+df1 <- data_frame(Catogery = c("Pregancies", "Glucose", "BP", "Insulin", "BMI", "DPF", "Age"), Mean = c(mean_preg, mean_glu, mean_bp, mean_insulin, mean_bmi, mean_dpf, mean_age), SD = c(sd_preg, sd_glu, sd_bp, sd_insulin, sd_bmi, sd_dpf, sd_age), Min = c(min_preg, min_glu, min_bp, min_insulin, min_bmi, min_dpf, min_age), Max = c(max_preg, max_glu, max_bp, max_insulin, max_bmi, max_dpf, max_age))
+df1
+```
+
+HISTOGRAMS OVERALL FILTERED DATA
+
+```{r}
+# Pregnancies
+ggplot(data_filtered, aes(x = Pregnancies)) + geom_histogram(fill = "cornflowerblue", color = "white", binwidth = 1) + labs(title = "Distribution of Pregnancies", x = "Number of Pregnancies", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5)) # To adjust the plot title in center
+
+# Glucose
+ggplot(data_filtered, aes(x = Glucose)) + geom_histogram(fill = "maroon", color = "white", binwidth = 10) + labs(title = "Distribution of Glucose", x = "Glucose Levels", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Blood Pressure
+ggplot(data_filtered, aes(x = BloodPressure)) + geom_histogram(fill = "cornflowerblue", color = "white", binwidth = 10) + labs(title = "Distribution of Blood Pressure", x = "Blood Pressure", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Insulin
+ggplot(data_filtered, aes(x = Insulin)) + geom_histogram(fill = "maroon", color = "white", binwidth = 125) + labs(title = "Distribution of Insulin Levels", x = "Insulin Levels", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# BMI
+ggplot(data_filtered, aes(x = BMI)) + geom_histogram(fill = "cornflowerblue", color = "white", binwidth = 5) + labs(title = "Distribution of BMI", x = "BMI", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Diabetes Pedigree Function
+ggplot(data_filtered, aes(x = DiabetesPedigreeFunction)) + geom_histogram(fill = "maroon", color = "white", binwidth = 0.1) + labs(title = "Distribution of Diabetes Pedigree Function", x = "Diabetes Pedigree Function", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Age
+ggplot(data_filtered, aes(x = Age)) + geom_histogram(fill = "cornflowerblue", color = "white", binwidth = 1) + labs(title = "Distribution of Age", x = "Age", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Outcome
+ggplot(data_filtered, aes(x = Outcome)) + geom_histogram(fill = "maroon", color = "white", binwidth = 0.1) + labs(title = "OUTCOME", x = "Outcome", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+```
+
+BOXPLOTS OVER FILTERED DATA
+
+```{r}
+# Pregnancies
+ggplot(data_filtered, aes(y = Pregnancies)) + geom_boxplot(fill = "cornflowerblue") + labs(title = "Distribution of Pregnancies") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5)) # To adjust the plot title in center
+
+# Glucose
+ggplot(data_filtered, aes(y = Glucose)) + geom_boxplot(fill = "maroon") + labs(title = "Distribution of Glucose") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Blood Pressure
+ggplot(data_filtered, aes(y = BloodPressure)) + geom_boxplot(fill = "cornflowerblue") + labs(title = "Distribution of Blood Pressure") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Insulin
+ggplot(data_filtered, aes(y = Insulin)) + geom_boxplot(fill = "maroon") + labs(title = "Distribution of Insulin Levels") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# BMI
+ggplot(data_filtered, aes(y = BMI)) + geom_boxplot(fill = "cornflowerblue") + labs(title = "Distribution of BMI") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Diabetes Pedigree Function
+ggplot(data_filtered, aes(y = DiabetesPedigreeFunction)) + geom_boxplot(fill = "maroon") + labs(title = "Distribution of Diabetes Pedigree Function") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Age
+ggplot(data_filtered, aes(y = Age)) + geom_boxplot(fill = "cornflowerblue") + labs(title = "Distribution of Age") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+COMBINE BOXPLOT
+
+```{r}
+combined_data <- data_filtered %>%
+  pivot_longer(cols = c(Pregnancies, Glucose, BloodPressure, Insulin, BMI, DiabetesPedigreeFunction, Age),
+               names_to = "Variable",
+               values_to = "Value")
+
+
+ggplot(combined_data, aes(x = Variable, y = Value, fill = Variable)) + 
+  geom_boxplot() + 
+  labs(title = "Diabetes Dataset") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_fill_manual(values = c("cornflowerblue", "maroon", "cornflowerblue", "maroon", "cornflowerblue", "maroon", "cornflowerblue"))
+
+```
+
+
+TO REMOVE OUTLIERS
+
+```{r}
+# Insulin 
+
+quartiles <- quantile(data_filtered$Insulin, probs=c(.25, .75), na.rm = FALSE)
+IQR_value <- IQR(data_filtered$Insulin)
+
+Lower <- quartiles[["25%"]] - 1.5*IQR_value
+Upper <- quartiles[["75%"]] + 1.5*IQR_value
+
+data_no_outlier_insulin <- subset(data_filtered, data_filtered$Insulin > Lower & data_filtered$Insulin < Upper)
+
+length(data_no_outlier_insulin)
+
+# Boxplot
+ggplot(data_no_outlier_insulin, aes(y = Insulin)) + geom_boxplot(fill = "maroon") + labs(title = "Distribution of Insulin Levels") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+# BMI
+
+quartiles <- quantile(data_filtered$BMI, probs=c(.25, .75), na.rm = FALSE)
+IQR_value <- IQR(data_filtered$BMI)
+
+Lower <- quartiles[["25%"]] - 1.5*IQR_value
+Upper <- quartiles[["75%"]] + 1.5*IQR_value
+
+data_no_outlier_BMI <- subset(data_filtered, data_filtered$BMI > Lower & data_filtered$BMI < Upper)
+
+length(data_no_outlier_BMI)
+
+# Boxplot
+ggplot(data_no_outlier_BMI, aes(y = BMI)) + geom_boxplot(fill = "maroon") + labs(title = "Distribution of BMI") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+```
+
+OUTCOME DISTRIBUTION
+
+*Filtering the filtered data into diabetic and non-diabetic based on the Outcome column (where, outcome == 0 is non-diabetic and outcome == 1 is diabetic)
+
+
+```{r}
+data_filtered %>% filter(Outcome == 1) -> Diabetic_data
+Diabetic_data ; nrow(Diabetic_data)
+
+data_filtered %>% filter(Outcome == 0) -> Non_diabetic_data
+Non_diabetic_data ; nrow(Non_diabetic_data)
+```
+
+Histogram for Diabetic Data
+
+```{r}
+# Glucose
+ggplot(Diabetic_data, aes(x = Glucose)) + geom_histogram(fill = "orange", color = "white", binwidth = 10) + labs(title = "Distribution of Glucose_Diabetic ", x = "Glucose Levels", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Blood Pressure
+ggplot(Diabetic_data, aes(x = BloodPressure)) + geom_histogram(fill = "orange", color = "white", binwidth = 10) + labs(title = "Distribution of Blood Pressure_Diabetic", x = "Blood Pressure", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Insulin
+ggplot(Diabetic_data, aes(x = Insulin)) + geom_histogram(fill = "orange", color = "white", binwidth = 125) + labs(title = "Distribution of Insulin Levels_Diabetic", x = "Insulin Levels", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# BMI
+ggplot(Diabetic_data, aes(x = BMI)) + geom_histogram(fill = "orange", color = "white", binwidth = 5) + labs(title = "Distribution of BMI_Diabetic", x = "BMI", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Diabetes Pedigree Function
+ggplot(Diabetic_data, aes(x = DiabetesPedigreeFunction)) + geom_histogram(fill = "orange", color = "white", binwidth = 0.1) + labs(title = "Distribution of Diabetes Pedigree Function_Diabetic", x = "Diabetes Pedigree Function", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Age
+ggplot(Diabetic_data, aes(x = Age)) + geom_histogram(fill = "orange", color = "white", binwidth = 1) + labs(title = "Distribution of Age_Diabetic", x = "Age", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+```
+Inference:
+
+As per the histograms we can see that there is a high glucose level, higher BMI and low insulin levels in diabetic people. Where as, Blood Pressure and Age seems to have negligible effect.
+
+
+Histogram for Non-Diabetic Data
+
+```{r}
+# Glucose
+ggplot(Non_diabetic_data, aes(x = Glucose)) + geom_histogram(fill = "purple1", color = "white", binwidth = 10) + labs(title = "Distribution of Glucose_Non-Diabetic", x = "Glucose Levels", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Blood Pressure
+ggplot(Non_diabetic_data, aes(x = BloodPressure)) + geom_histogram(fill = "purple1", color = "white", binwidth = 10) + labs(title = "Distribution of Blood Pressure_Non-Diabetic", x = "Blood Pressure", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Insulin
+ggplot(Non_diabetic_data, aes(x = Insulin)) + geom_histogram(fill = "purple1", color = "white", binwidth = 125) + labs(title = "Distribution of Insulin Levels_Non-Diabetic", x = "Insulin Levels", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# BMI
+ggplot(Non_diabetic_data, aes(x = BMI)) + geom_histogram(fill = "purple1", color = "white", binwidth = 5) + labs(title = "Distribution of BMI_Non-Diabetic", x = "BMI", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Diabetes Pedigree Function
+ggplot(Non_diabetic_data, aes(x = DiabetesPedigreeFunction)) + geom_histogram(fill = "purple1", color = "white", binwidth = 0.1) + labs(title = "Distribution of Diabetes Pedigree Function_Non-Diabetic", x = "Diabetes Pedigree Function", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+# Age
+ggplot(Non_diabetic_data, aes(x = Age)) + geom_histogram(fill = "purple1", color = "white", binwidth = 1) + labs(title = "Distribution of Age_Non-Diabetic", x = "Age", y = "Frequency") + theme_classic()  + theme(plot.title = element_text(hjust = 0.5))
+
+```
+Inference:
+
+As per the histograms we can see that there is a normal glucose level, normal BMI and bit higher insulin levels in diabetic people. Whereas, Blood Pressure and Age seems to have negligible effect.
+
+
+COMBINED HISTOGRAM FOR DIABETIC AND NON-DIABETIC FILTERED DATA
+
+```{r}
+# Combining the data into a single dataframe
+combined_data <- rbind(
+  cbind(Diabetic_data, Group = "Diabetic"),
+  cbind(Non_diabetic_data, Group = "Non-Diabetic")
+)
+
+# Glucose
+ggplot(combined_data, aes(x = Glucose, fill = Group)) + 
+  geom_histogram(alpha = 0.6, binwidth = 10, position = "identity") + 
+  labs(title = "Distribution of Glucose", x = "Glucose Levels", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  facet_wrap(~ Group)
+
+# Blood Pressure
+ggplot(combined_data, aes(x = BloodPressure, fill = Group)) + 
+  geom_histogram(alpha = 0.6, binwidth = 10, position = "identity") + 
+  labs(title = "Distribution of Blood Pressure", x = "Blood Pressure", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  facet_wrap(~ Group)
+
+# Insulin
+ggplot(combined_data, aes(x = Insulin, fill = Group)) + 
+  geom_histogram(alpha = 0.6, binwidth = 125, position = "identity") + 
+  labs(title = "Distribution of Insulin Levels", x = "Insulin Levels", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  facet_wrap(~ Group)
+
+# BMI
+ggplot(combined_data, aes(x = BMI, fill = Group)) + 
+  geom_histogram(alpha = 0.6, binwidth = 5, position = "identity") + 
+  labs(title = "Distribution of BMI", x = "BMI", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  facet_wrap(~ Group)
+
+# Diabetes Pedigree Function
+ggplot(combined_data, aes(x = DiabetesPedigreeFunction, fill = Group)) + 
+  geom_histogram(alpha = 0.6, binwidth = 0.1, position = "identity") + 
+  labs(title = "Distribution of Diabetes Pedigree Function", x = "Diabetes Pedigree Function", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  facet_wrap(~ Group)
+
+# Age
+ggplot(combined_data, aes(x = Age, fill = Group)) + 
+  geom_histogram(alpha = 0.6, binwidth = 1, position = "identity") + 
+  labs(title = "Distribution of Age", x = "Age", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  facet_wrap(~ Group)
+
+```
+Inference:
+
+1. Glucose Levels: Larger no of non- diabetic people seems to have their glucose levels in normal range (i.e.; 80 to 120). Whereas, in diabetics more people have glucose level more that 150.
+
+2. Blood Pressure: seems to have a similar (noraml) range in both the groups.
+
+3. Insulin levels: Levels are low in diabetic and high in non-diabetic.
+
+4. BMI: Higher BMI in non-diabetic.
+
+5. Age: People in the age group of 10 to 40 have lesser chance of getting diabetes whereas, older people are more prone to diabetes. 
+
+
+
+
+COMBINED GRAPH IN ONE AXIS
+
+```{r}
+# Glucose
+ggplot(combined_data, aes(x = Glucose, fill = Group)) + 
+  geom_histogram(alpha = 0.7, binwidth = 10, position = "dodge") + 
+  scale_fill_manual(values = c("yellow", "purple1")) + 
+  labs(title = "Distribution of Glucose", x = "Glucose Levels", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(legend.position = "bottom")
+
+# Blood Pressure
+ggplot(combined_data, aes(x = BloodPressure, fill = Group)) + 
+  geom_histogram(alpha = 0.7, binwidth = 10, position = "dodge") + 
+  scale_fill_manual(values = c("yellow", "purple1")) + 
+  labs(title = "Distribution of Blood Pressure", x = "Blood Pressure", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(legend.position = "bottom")
+
+# Insulin
+ggplot(combined_data, aes(x = Insulin, fill = Group)) + 
+  geom_histogram(alpha = 0.7, binwidth = 125, position = "dodge") + 
+  scale_fill_manual(values = c("yellow", "purple1")) + 
+  labs(title = "Distribution of Insulin Levels", x = "Insulin Levels", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(legend.position = "bottom")
+
+# BMI
+ggplot(combined_data, aes(x = BMI, fill = Group)) + 
+  geom_histogram(alpha = 0.7, binwidth = 5, position = "dodge") + 
+  scale_fill_manual(values = c("yellow", "purple1")) + 
+  labs(title = "Distribution of BMI", x = "BMI", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(legend.position = "bottom")
+
+# Diabetes Pedigree Function
+ggplot(combined_data, aes(x = DiabetesPedigreeFunction, fill = Group)) + 
+  geom_histogram(alpha = 0.7, binwidth = 0.1, position = "dodge") + 
+  scale_fill_manual(values = c("yellow", "purple1")) + 
+  labs(title = "Distribution of Diabetes Pedigree Function", x = "Diabetes Pedigree Function", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(legend.position = "bottom")
+
+# Age
+ggplot(combined_data, aes(x = Age, fill = Group)) + 
+  geom_histogram(alpha = 0.7, binwidth = 1, position = "dodge") + 
+  scale_fill_manual(values = c("yellow", "purple1")) + 
+  labs(title = "Distribution of Age", x = "Age", y = "Frequency") + 
+  theme_classic() + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(legend.position = "bottom")
+```
+
+CONCLUSION:
+
+Higher glucose levels and higher BMI could be some of the reasons for getting diabetes.
+
+
+
+

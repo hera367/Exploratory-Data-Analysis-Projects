@@ -1,0 +1,295 @@
+---
+author: "Hera Fatma (231180006)"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+1.2. Addition and Subtraction 
+```{r}
+2+2
+3-2
+```
+Error
+```{r}
+# 3 - 
+  
+  # ERROR: Error: Incomplete expression: 3
+```
+
+Division and Multiplication 
+```{r}
+3 / 2
+3 * 2
+```
+Power
+```{r}
+2 ^ 2
+2 ^ 3
+```
+1.3. OPERATIONS
+```{r}
+(2+3) * 3
+2 + (3 * 3)
+```
+FUNCTIONS
+```{r}
+sqrt(4)
+abs(-2)
+abs(2)
+```
+```{r}
+# sqrt() # function will display error without any argument
+
+# ERROR: Error in sqrt() : 0 arguments passed to 'sqrt' which requires 1
+```
+
+1.4. ASSIGNING VARIABLES
+```{r}
+x <- 2 * 3
+y = 2 -1
+x
+y 
+# X # R is case sensitive. ERROR: Error: object 'X' not found
+```
+To retrieve a list of objects in your current working directory
+```{r}
+ls()
+```
+1.5. NUMERICAL VECTORS
+```{r}
+x <- c(2.3, 1, 5)
+x # overwrites the value of x
+```
+To check the length of a vector
+```{r}
+length(x)
+```
+functions to access vector type
+```{r}
+mode(x)
+class(x)
+```
+To create a sequence of vector using ':' function
+```{r}
+mynums <- 10:1
+mynums
+```
+SUMMARY FUNCTIONS
+```{r}
+sum(mynums)
+min(mynums)
+max(mynums)
+range(mynums) #min and max together
+diff(range(mynums))
+mean(mynums)
+sd(mynums)
+median(mynums)
+```
+If you use a function such as subtraction or division on a numeric vector, the function is repeated for all entries of the vector.
+```{r}
+mynums - 5 # subtract 5 from every number
+mynums / 2 # divide every number by 2
+```
+1.6. INDEXING
+```{r}
+mynums[1]
+mynums[2]
+mynums[1:4]
+mynums[-2] # will retrieve except 2nd position
+```
+```{r}
+1:100
+```
+1.7. LOGICAL VECTORS
+
+If u don't know the position of ur value of interest, check for values greater or less than.
+```{r}
+mynums > 3
+mynums >= 3
+```
+```{r}
+mynums < 4
+mynums <= 4
+mynums == 4
+mynums != 4
+```
+NOTE: Result of logical operation is vector itself.
+
+```{r}
+mylog <- mynums >= 3
+class(mylog)
+```
+NOTE: Logical vectors can be used for indexing.
+
+```{r}
+mynums[mylog]
+```
+```{r}
+mynums [mynums >= 3]
+```
+1.8. CHARACTER VECTOR
+
+```{r}
+gender <- c('F', 'M', 'M', 'F', 'F', 'F')
+gender
+class(gender)
+gender[2]   #indexing
+gender[gender == 'F']
+```
+To get the index of a character
+
+```{r}
+which (gender == 'F')
+```
+Can't perform mathematical functions on character or logical vectors
+
+```{r}
+# mean(gender)
+
+#ERROR: Warning: argument is not numeric or logical: returning NA[1] NA
+```
+
+1.9. FACTOR VECTORS 
+
+NOTE: Factor has levels (i.e, different unique categories of the vector. same as the result of .unique() in python)
+```{r}
+gender <- as.factor(gender)
+gender # output has no double quotes, unlike character vector.
+levels(gender)
+```
+manipulating the vector
+
+```{r}
+gender[3] <- 'not_declared'
+gender
+```
+```{r}
+# To insert the values you first need to change the levels
+
+levels(gender) <- c('M', 'F', 'not_declared')
+gender[3] <- 'not_declared'
+gender
+```
+1.10. DATA FRAMES
+
+* 2-D object with rows and columns. Each columns contains a vector.
+*Each argument of the function becomes a column.
+
+```{r}
+students <- c('Harry', "Sam", 'Abby')
+df <- data.frame(students, score = c(50,77,89))
+df
+nrow(df)
+ncol(df)
+colnames(df)
+df$score
+mean(df$score)
+str(df)
+summary(df)
+```
+
+Indexing Data Frame
+
+df[row , column]
+
+```{r}
+df[1,]
+df[,2]
+df[1:2,]
+df[,1][2]  # first column 2nd element
+```
+To extract the row of the participant called sam using logical operand
+```{r}
+df[df$students == 'Sam',]
+df[df$students == 'Sam',]$score
+```
+
+1.11. LOADING IN FILES
+
+```{r}
+getwd()
+list.files()
+
+# setwd()   ## To change working directory
+```
+Reading a file
+```{r}
+nettle <- read.csv("./../datasets/nettle_1999_climate.csv")
+
+head(nettle)
+```
+```{r}
+tail(nettle)
+```
+Overwriting contents of a data frame --> can be corrected. Solution: simply re-execute the above 3 blocks (from file loding).
+```{r}
+# nettle$Langs <- NA   ## overwrites Langs column as NA
+nettle
+```
+Read .txt files (tab seperated)
+```{r}
+mydf <- read.table("./../datasets/sample1.txt", sep = '\t', header = TRUE)
+```
+
+1.12. PLOTTING
+
+```{r}
+hist(nettle$Langs)
+```
+```{r}
+hist(nettle$Langs, col = 'salmon')
+hist(nettle$Langs, col = "maroon")
+```
+```{r}
+head(colors())
+```
+1.13. INSTALLING, LOADING AND CITING PACKAGES
+
+a. install package --> install.packages('')
+b. load package --> library()
+
+```{r}
+# install.packages("tidyverse")
+```
+```{r}
+library(tidyverse)
+```
+citing packages
+```{r}
+citation('tidyverse')
+packageVersion('tidyverse')
+```
+```{r}
+R.Version()
+```
+1.14. SEEKING HELP
+
+syntax: ?function name
+
+```{r}
+?seq()
+```
+If u forget a function name
+```{r}
+head(apropos('test'))
+```
+
+
+
+
+
+
+
+
+
+
+NOTES:
+
+1. Type casting: syntax --> as.data_type()
+2. In factor --> DATA POINTS are TOKENS of UNIQUE CATOGERY.
+3. Result of logical operation is vector itself.
+4. Logical vectors can be used for indexing

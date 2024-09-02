@@ -1,0 +1,450 @@
+---
+author: "Hera Fatma (231180006)"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+LOADING LIBRARIES
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(psych)
+```
+
+```{r}
+# install.packages("pryr")
+library(pryr)
+```
+
+
+## *NOTES ON TOPICS: 5.6 on standard scores, 5.7 on correlation and 5.8 on handling missing values*
+
+1.  STANDARD SCORE == z SCORE
+
+pnorm(z score)
+
+2.  CORRELATIONS
+
+```{r}
+# load('./../GITHUB/BSE659/Module 3/Notebooks/parenthood.Rdata')
+# who(True)
+```
+
+```{r}
+# head(parenthood, 10)
+```
+
+```{r}
+# describe( parenthood )
+```
+
+```{r}
+# hist(parenthood$dan.sleep)
+# hist(parenthood$baby.sleep)
+# hist(parenthood$dan.grump)
+```
+
+SCATTER PLOTS
+
+```{r}
+# ggplot(parenthood, aes(x=dan.sleep, y=dan.grump)) + geom_point() + theme_classic()
+# ggplot(parenthood, aes(x=baby.sleep, y=dan.grump)) + geom_point() + theme_classic()
+# ggplot(parenthood, aes(x=baby.sleep, y=dan.sleep)) + geom_point() + theme_classic()
+```
+
+Inference:
+
+stronger correlation for dan's sleep with dan.grump.
+
+That is, if my son sleeps more, I get more sleep (positive relationship,
+but if he sleeps more then I get less grumpy (negative relationship).
+
+**Pearson's correlation coefficient**
+
+cor()
+
+is a measure that varies from −1 to 1. When r = −1 --\> it means that we
+have a perfect negative relationship, and when r = 1 --\> it means we
+have a perfect positive relationship. When r = 0, there's no
+relationship at all.
+
+\*covariance as an "average cross product" between X and Y.
+
+The covariance has the nice property that, if X and Y are entirely
+unrelated, then the covariance is exactly zero. If the relationship
+between them is positive then the covariance is also positive; and if
+the relationship is negative then the covariance is also negative. In
+other words, the covariance captures the basic qualitative idea of
+correlation.
+
+\*The Pearson correlation coefficient r fixes this interpretation
+problem by standardising the covariance, in pretty much the exact same
+way that the z-score standardises a raw score: by dividing by the
+standard deviation.
+
+```{r}
+# cor( x = parenthood$dan.sleep, y = parenthood$dan.grump )
+```
+
+complete corr
+
+```{r}
+# cor( x = parenthood ) 
+```
+
+table
+
+```{r}
+ knitr::kable(
+ rbind(
+c("-1.0 to -0.9" ,"Very strong", "Negative"),
+c("-0.9 to -0.7", "Strong", "Negative") ,
+c("-0.7 to -0.4", "Moderate", "Negative") ,
+c("-0.4 to -0.2", "Weak", "Negative"),
+c("-0.2 to 0","Negligible", "Negative") ,
+c("0 to 0.2","Negligible", "Positive"),
+c("0.2 to 0.4", "Weak", "Positive"), 
+c("0.4 to 0.7", "Moderate", "Positive"), 
+c("0.7 to 0.9", "Strong", "Positive"), 
+c("0.9 to 1.0", "Very strong", "Positive")), col.names=c("Correlation", "Strength", "Direction"),
+  booktabs = TRUE)
+```
+
+Spearman's rank correlations:
+
+rank()
+
+1.using the rank() function to construct the rankings, and then
+calculate the Pearson correlation on these ranks. 2.just specify the
+method argument of the cor() function.
+
+\*That's where the correlate() function in the lsr package can be handy.
+If you feed it a data frame that contains factors, it knows to ignore
+them, and returns the pairwise correlations only between the numeric
+variables:
+
+3.  HANDELLING MISSING VALUES
+
+(na.rm = TRUE)
+
+cor(parenthood2, use = "complete.obs")
+
+"pairwise.complete.obs"
+
+```{r}
+#load( "parenthood2.Rdata" )
+# load('./../GITHUB/BSE659/Module 3/Notebooks/parenthood2.Rdata')
+# print( parenthood2 )
+```
+
+```{r}
+# describe(parenthood2)
+# cor(parenthood2)
+```
+
+```{r}
+# cor(parenthood2, use = "complete.obs")
+```
+
+```{r}
+# cor(parenthood2, use = "pairwise.complete.obs") 
+```
+
+```{r}
+# correlate(parenthood2)
+```
+
+
+
+*ASSIGNMENT 4*
+
+```{r}
+# install.packages("ggcorrplot")
+library(ggcorrplot)
+library(reshape2)
+```
+
+LOADING 'mtcars' DATASET
+
+```{r}
+data("mtcars")
+head(mtcars, 10)
+```
+
+1.  CORRELATION MATRIX
+
+```{r}
+cormat <- round(cor(mtcars),2)
+cormat
+```
+
+2.  HEAT MAP
+
+```{r}
+melted_cormat <- melt(cormat)
+melted_cormat
+```
+
+```{r}
+ggplot(melted_cormat, aes(x = Var1, y = Var2, fill = value)) + geom_tile() ## geom_title --> for heat map of melted  values
+```
+
+## if more data use geom_raster()
+
+To check for NA.
+
+```{r}
+# Get lower triangle of the correlation matrix
+  get_lower_tri<-function(cormat){
+    cormat[upper.tri(cormat)] <- NA
+    return(cormat)
+  }
+  # Get upper triangle of the correlation matrix
+  get_upper_tri <- function(cormat){
+    cormat[lower.tri(cormat)]<- NA
+    return(cormat)
+  }
+```
+
+```{r}
+upper_tri <- get_upper_tri(cormat)
+upper_tri
+```
+
+Melt the correlation data and drop the rows with NA values :
+
+```{r}
+library(reshape2)
+melted_cormat2 <- melt(upper_tri, na.rm = TRUE)
+melted_cormat2
+
+# HEATMAP
+
+ggplot(data = melted_cormat2, aes(Var2, Var1, fill = value)) + geom_tile(color = 'white') +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1,1), space = "Lab",
+                       name = "Pearson\nCorrelation") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust =1, size = 12, hjust =1)) +
+  coord_fixed()
+```
+
+# negative correlations are in blue color and positive correlations in red. The function scale_fill_gradient2 is used with the argument limit = c(-1,1) as correlation coefficients range from -1 to 1.
+
+coord_fixed() : this function ensures that one unit on the x-axis is the
+same length as one unit on the y-axis.
+
+3.  REORDER THE CORRELATION MATRIX
+
+describes how to reorder the correlation matrix according to the
+correlation coefficient. This is useful to identify the hidden pattern
+in the matrix. hclust for hierarchical clustering order is used
+
+```{r}
+reorder_cormat <- function(cormat){
+# Use correlation between variables as distance
+dd <- as.dist((1-cormat)/2)
+hc <- hclust(dd)
+cormat <-cormat[hc$order, hc$order]
+}
+```
+
+```{r}
+# Reorder the correlation matrix
+cormat <- reorder_cormat(cormat)
+upper_tri <- get_upper_tri(cormat)
+
+# Melt the correlation matrix
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+
+# Create a ggheatmap
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+ geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+    name="Pearson\nCorrelation") +
+  theme_minimal()+ # minimal theme
+ theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+    size = 12, hjust = 1))+
+ coord_fixed()
+
+# Print the heatmap
+print(ggheatmap)
+```
+
+## Add correlation coefficients on the heatmap
+
+```{r}
+ggheatmap + 
+geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+theme(
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.border = element_blank(),
+  panel.background = element_blank(),
+  axis.ticks = element_blank(),
+  legend.justification = c(1, 0),
+  legend.position = c(0.6, 0.7),
+  legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                title.position = "top", title.hjust = 0.5))
+```
+
+4.  USING corrplot() FUNCTION: Draw a correlogram
+
+```{r}
+# install.packages("corrplot")
+library(corrplot)
+```
+
+```{r}
+res <- cor(mtcars)
+round(res, 2)
+
+
+
+corrplot(res, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+
+```{r}
+# install.packages("Hmisc")
+# library("Hmisc")
+```
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% res2 \<-
+rcorr(as.matrix(mtcars)) res2
+
+# Insignificant correlation are crossed
+
+corrplot(res2$r, type="upper", order="hclust",  p.mat = res2$P,
+sig.level = 0.01, insig = "blank")
+
+# Insignificant correlations are leaved blank
+
+corrplot(res2$r, type="upper", order="hclust",  p.mat = res2$P,
+sig.level = 0.01, insig = "blank")
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+5.  USING chart.Correlation(): Draw scatter plots
+
+```{r}
+# install.packages("PerformanceAnalytics")
+library("PerformanceAnalytics")
+```
+
+```{r}
+chart.Correlation(mtcars, histogram=TRUE, pch=19)
+```
+
+\*In the above plot:
+
+The distribution of each variable is shown on the diagonal. On the
+bottom of the diagonal : the bivariate scatter plots with a fitted line
+are displayed On the top of the diagonal : the value of the correlation
+plus the significance level as stars Each significance level is
+associated to a symbol : p-values(0, 0.001, 0.01, 0.05, 0.1, 1) \<=\>
+symbols("***", "**", "*", ".", " ")
+
+SUMMARY:
+
+a.  Use cor() function for simple correlation analysis
+b.  Use rcorr() function from Hmisc package to compute matrix of
+    correlation coefficients and matrix of p-values in single step.
+c.  Use symnum(), corrplot()[from corrplot package], chart.Correlation()
+    [from PerformanceAnalytics package], or heatmap() functions to
+    visualize a correlation matrix.
+
+```{r}
+library(ggcorrplot)
+```
+
+```{r}
+corr <- round(cor(mtcars),1)
+head(corr[,1:6])
+```
+
+# Compute a matrix of correlation p-values
+
+```{r}
+p.mat <- cor_pmat(mtcars)
+head(p.mat[,1:4])
+```
+
+Correlation matrix visualization
+
+```{r}
+ggcorrplot(corr)
+```
+
+```{r}
+# method = "circle"
+ggcorrplot(corr, method = "circle")
+```
+
+# Reordering the correlation matrix
+
+```{r}
+# using hierarchical clustering
+ggcorrplot(corr, hc.order = TRUE, outline.col = "white")
+```
+
+# Types of correlogram layout
+
+```{r}
+# Get the lower triangle
+ggcorrplot(corr, hc.order = TRUE, type = "lower",
+     outline.col = "white")
+```
+
+```{r}
+# Get the upper triangle
+ggcorrplot(corr, hc.order = TRUE, type = "upper",
+     outline.col = "white")
+```
+
+# Change colors and theme
+
+```{r}
+# Argument colors
+ggcorrplot(corr, hc.order = TRUE, type = "lower",
+   outline.col = "white",
+   ggtheme = ggplot2::theme_gray,
+   colors = c("#6D9EC1", "white", "#E46726"))
+```
+
+# Add correlation coefficients
+
+```{r}
+# argument lab = TRUE
+ggcorrplot(corr, hc.order = TRUE, type = "lower",
+   lab = TRUE)
+```
+
+# Add correlation significance level
+
+```{r}
+# Argument p.mat
+# Barring the no significant coefficient
+ggcorrplot(corr, hc.order = TRUE,
+    type = "lower", p.mat = p.mat)
+```
+
+# Leave blank on no significant coefficient
+
+```{r}
+ggcorrplot(corr, p.mat = p.mat, hc.order = TRUE,
+    type = "lower", insig = "blank")
+```
